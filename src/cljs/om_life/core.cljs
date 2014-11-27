@@ -91,6 +91,9 @@
         [:div.tools
          [:button {:on-click (fn [e]
                                (.preventDefault e)
+                               (publish! (event ::rewind)))} "Rewind"]
+         [:button {:on-click (fn [e]
+                               (.preventDefault e)
                                (publish-step-event!))} "Step"]
          (if running?
            [:button {:on-click (stop owner)} "Stop"]
@@ -117,9 +120,16 @@
 
 (def benchmarks (atom []))
 
+(def history (atom []))
+
 (defn step [_]
-  (swap! benchmarks #(cons (. (js/Date.) (getTime)) (take 999 %)))
+  (swap! history #(cons @life (take 999 %)))
   (swap! life generation))
+
+(defn rewind [_]
+  (when-let [prev (first @history)]
+    (reset! life prev)
+    (swap! history rest)))
 
 (defn bench []
   (let [latest (take 1000 @benchmarks)]
@@ -128,7 +138,8 @@
 
 (defonce _
   (e/subscriptions
-   [::step] step))
+   [::step] step
+   [::rewind] rewind))
 
 (defn main []
   (om/root
