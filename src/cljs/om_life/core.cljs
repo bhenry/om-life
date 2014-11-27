@@ -13,30 +13,78 @@
     [40 13] [18 14] [21 14] [17 14] [40 15] [17 13] [18 12]
     [23 14] [23 13] [21 13] [20 13]})
 
-(defonce world (atom seed))
+(defonce life (atom seed))
 
-(defn cell [{:keys [x y alive?]} _owner]
+(defn change-cell
+  ([x y]
+     (swap! life (fn [cells]
+                   (if (cells [x y])
+                     (set (remove #{[x y]} cells))
+                     (conj cells [x y])))))
+  ([x y add?]
+     (if add?
+       (swap! life conj [x y])
+       (swap! life #(set (remove #{[x y]} %))))))
+
+(defn change [x y]
+  (fn [e]
+    (.preventDefault e)
+    (change-cell x y)))
+
+(defn drag [x y]
+  (fn [e]
+    (.preventDefault e)
+    (change-cell x y :add)))
+
+(defn cell [{:keys [x y alive?]} owner]
   (reify
     om/IRender
     (render [_]
       (html
        [:td {:class (if alive? "alive")
-             :style {:width "5px" :height "5px"}}]))))
+             :on-click (change x y)
+             :on-drag-enter (drag x y)}]))))
+
+(defonce ticker (atom nil))
+
+(defn publish-step-event! []
+  (publish! (event ::step)))
+
+(defn start [owner]
+  (fn [e]
+    (.preventDefault e)
+    (js/clearInterval @ticker)
+    (om/set-state! owner :running? true)
+    (reset! ticker (.setInterval js/window publish-step-event! 80))))
+
+(defn stop [owner]
+  (fn [e]
+    (.preventDefault e)
+    (om/set-state! owner :running? false)
+    (js/clearInterval @ticker)))
 
 (defn game [world owner]
   (reify
     om/IInitState
     (init-state [_]
-      {:height 30
-       :width 50})
+      {:height 40
+       :width 70})
     om/IRenderState
-    (render-state [_ {:keys [width height]}]
+    (render-state [_ {:keys [width height running?]}]
       (html
-       [:table
-        (for [h (range height)]
-          [:tr
-           (for [w (range width)]
-             (om/build cell {:x w :y h :alive? (world [w h])}))])]))))
+       [:div
+        [:div.tools
+         [:button {:on-click (fn [e]
+                               (.preventDefault e)
+                               (publish-step-event!))} "Step"]
+         (if running?
+           [:button {:on-click (stop owner)} "Stop"]
+           [:button {:on-click (start owner)} "Start"])]
+        [:table.game
+         (for [h (range height)]
+           [:tr
+            (for [w (range width)]
+              (om/build cell {:x w :y h :alive? (world [w h])}))])]]))))
 
 (defn get-neighbors [p]
   ((apply juxt (for [a [-1 0 1]
@@ -44,7 +92,7 @@
                      :when (not= [0 0] [a b])]
                  (fn [[x y]] [(+ x a) (+ y b)]))) p))
 
-(defn iterate-world [cells]
+(defn generation [cells]
   (set (for [[loc n] (frequencies (mapcat get-neighbors cells))
              :when (or (= n 3) (and (= n 2) (cells loc)))]
          loc)))
@@ -53,21 +101,20 @@
 
 (defn step [_]
   (swap! benchmarks #(cons (. (js/Date.) (getTime)) (take 999 %)))
-  (swap! world iterate-world))
+  (swap! life generation))
 
 (defn bench []
   (let [latest (take 1000 @benchmarks)]
     (/ (- (first latest) (last latest))
        (dec (count latest)))))
 
-(defn ticker []
-  (.setInterval js/window #(publish! (event ::step)) 100))
+(defonce _
+  (e/subscriptions
+   [::step] step))
 
 (defn main []
   (om/root
    game
-   world
-   {:target (. js/document (getElementById "app"))})
-  (e/subscriptions
-   [::step] step))
+   life
+   {:target (. js/document (getElementById "app"))}))
 
