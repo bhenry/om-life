@@ -55,7 +55,6 @@
     (render [_]
       (html
        [:td {:class (if alive? "alive")
-             :draggable true
              :on-click (change x y)
              :on-mouse-down (drag-start x y)
              :on-mouse-up (drag-end x y)
