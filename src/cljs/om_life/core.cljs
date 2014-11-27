@@ -75,8 +75,8 @@
 (defn stop [owner]
   (fn [e]
     (.preventDefault e)
-    (om/set-state! owner :running? false)
-    (js/clearInterval @ticker)))
+    (js/clearInterval @ticker)
+    (om/set-state! owner :running? false)))
 
 (defn game [world owner]
   (reify
@@ -94,7 +94,10 @@
                                (publish-step-event!))} "Step"]
          (if running?
            [:button {:on-click (stop owner)} "Stop"]
-           [:button {:on-click (start owner)} "Start"])]
+           [:button {:on-click (start owner)} "Start"])
+         [:button {:on-click (fn [e]
+                               (.preventDefault e)
+                               (js/console.log (pr-str @life)))} "Print"]]
         [:table.game
          (for [h (range height)]
            [:tr
