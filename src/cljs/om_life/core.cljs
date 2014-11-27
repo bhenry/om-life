@@ -31,10 +31,23 @@
     (.preventDefault e)
     (change-cell x y)))
 
-(defn drag [x y]
+(defonce dragging? (atom false))
+
+(defn drag-start [x y]
   (fn [e]
     (.preventDefault e)
-    (change-cell x y :add)))
+    (reset! dragging? true)))
+
+(defn drag-end [x y]
+  (fn [e]
+    (.preventDefault e)
+    (reset! dragging? false)))
+
+(defn drag-by [x y]
+  (fn [e]
+    (.preventDefault e)
+    (if @dragging?
+      (change-cell x y :add))))
 
 (defn cell [{:keys [x y alive?]} owner]
   (reify
@@ -42,8 +55,11 @@
     (render [_]
       (html
        [:td {:class (if alive? "alive")
+             :draggable true
              :on-click (change x y)
-             :on-drag-enter (drag x y)}]))))
+             :on-mouse-down (drag-start x y)
+             :on-mouse-up (drag-end x y)
+             :on-mouse-move (drag-by x y)}]))))
 
 (defonce ticker (atom nil))
 
