@@ -91,16 +91,16 @@
         [:div.tools
          [:button {:on-click (fn [e]
                                (.preventDefault e)
+                               (js/console.log (pr-str @life)))} "Print"]
+         [:button {:on-click (fn [e]
+                               (.preventDefault e)
                                (publish! (event ::rewind)))} "Rewind"]
          [:button {:on-click (fn [e]
                                (.preventDefault e)
-                               (publish-step-event!))} "Step"]
+                               (publish! (event ::step)))} "Step"]
          (if running?
            [:button {:on-click (stop owner)} "Stop"]
-           [:button {:on-click (start owner)} "Start"])
-         [:button {:on-click (fn [e]
-                               (.preventDefault e)
-                               (js/console.log (pr-str @life)))} "Print"]]
+           [:button {:on-click (start owner)} "Start"])]
         [:table.game
          (for [h (range height)]
            [:tr
