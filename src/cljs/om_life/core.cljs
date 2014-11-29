@@ -56,7 +56,11 @@
     om/IRender
     (render [_]
       (html
-       [:td {:class (if alive? "alive")
+       [:td {:class (when alive? "alive")
+             :style (when alive?
+                      {:background-color (rand-nth ["#f00"
+                                                    "#0f0"
+                                                    "#00f"])})
              :on-click (change x y)
              :on-mouse-down (drag-start x y)
              :on-mouse-up (drag-end x y)
