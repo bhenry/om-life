@@ -14,10 +14,11 @@
     [23 14] [23 13] [21 13] [20 13]})
 
 (defonce life (atom seed))
+(defonce history (atom [seed]))
+
 (defonce dragging? (atom false))
 (defonce ticker (atom nil))
 (defonce benchmarks (atom []))
-(defonce history (atom []))
 
 (defn change-cell
   ([x y]
@@ -104,7 +105,10 @@
                                (publish! (event ::step)))} "Step"]
          (if running?
            [:button {:on-click (stop owner)} "Stop"]
-           [:button {:on-click (start owner)} "Start"])]
+           [:button {:on-click (start owner)} "Start"])
+         [:button {:on-click (fn [e]
+                               (.preventDefault e)
+                               (publish! (event ::clear)))} "Clear"]]
         [:table.game
          (for [h (range height)]
            [:tr
@@ -131,6 +135,9 @@
     (reset! life prev)
     (swap! history rest)))
 
+(defn clear [_]
+  (reset! life #{}))
+
 (defn bench []
   (let [latest (take 1000 @benchmarks)]
     (/ (- (first latest) (last latest))
@@ -139,7 +146,8 @@
 (defonce _
   (e/subscriptions
    [::step] step
-   [::rewind] rewind))
+   [::rewind] rewind
+   [::clear] clear))
 
 (defn main []
   (om/root
