@@ -2,6 +2,18 @@ td.alive {
     background-color: #c0c0c0;
 }
 
+td.red {
+    background-color: #f00;
+}
+
+td.green {
+    background-color: #0f0;
+}
+
+td.blue {
+    background-color: #00f;
+}
+
 table.game {
     border-collapse: collapse;
     border: 2px solid #000;
@@ -11,4 +23,8 @@ td {
     border: 1px solid #ccc;
     height: 10px;
     width: 10px;
+}
+
+#header h2 a {
+    vertical-align: sub;
 }
