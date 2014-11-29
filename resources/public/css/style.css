@@ -1,3 +1,11 @@
+.left {
+    float: left;
+}
+
+.right {
+    float: right;
+}
+
 td.alive {
     background-color: #c0c0c0;
 }
@@ -28,3 +36,4 @@ td {
 #header h2 a {
     vertical-align: sub;
 }
+
