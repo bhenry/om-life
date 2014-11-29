@@ -14,6 +14,10 @@
     [23 14] [23 13] [21 13] [20 13]})
 
 (defonce life (atom seed))
+(defonce dragging? (atom false))
+(defonce ticker (atom nil))
+(defonce benchmarks (atom []))
+(defonce history (atom []))
 
 (defn change-cell
   ([x y]
@@ -30,8 +34,6 @@
   (fn [e]
     (.preventDefault e)
     (change-cell x y)))
-
-(defonce dragging? (atom false))
 
 (defn drag-start [x y]
   (fn [e]
@@ -60,8 +62,6 @@
              :on-mouse-up (drag-end x y)
              :on-mouse-move (drag-by x y)}]))))
 
-(defonce ticker (atom nil))
-
 (defn publish-step-event! []
   (publish! (event ::step)))
 
@@ -82,8 +82,8 @@
   (reify
     om/IInitState
     (init-state [_]
-      {:height 40
-       :width 70})
+      {:height 30
+       :width 50})
     om/IRenderState
     (render-state [_ {:keys [width height running?]}]
       (html
@@ -117,10 +117,6 @@
   (set (for [[loc n] (frequencies (mapcat get-neighbors cells))
              :when (or (= n 3) (and (= n 2) (cells loc)))]
          loc)))
-
-(def benchmarks (atom []))
-
-(def history (atom []))
 
 (defn step [_]
   (swap! history #(cons @life (take 999 %)))
